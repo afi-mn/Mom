@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Happy Mother's Day — A Gift for Mom</title>
+<style>
+  :root{
+    --card-w: 760px;
+    --card-h: 480px;
+    --accent: #ff6b98;
+    --bg1: #fff0f6;
+    --bg2: #ffeef8;
+    --text: #3b2b2b;
+  }
+  html,body{height:100%;margin:0;font-family: 'Segoe UI', Roboto, Arial, sans-serif;background: linear-gradient(135deg,var(--bg1),var(--bg2));color:var(--text)}
+  .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:30px;gap:20px;flex-wrap:wrap}
+  .card{
+    width:var(--card-w);
+    height:var(--card-h);
+    border-radius:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.12);
+    background:linear-gradient(180deg,#fff 0%,#fff8fb 100%);
+    position:relative;overflow:hidden;padding:28px;display:flex;gap:20px;
+  }
+
+  /* left: photo + message preview */
+  .left{
+    width:48%;display:flex;flex-direction:column;gap:12px;
+  }
+  .photo-frame{
+    flex:1;border-radius:12px;background:linear-gradient(135deg,#fff,#fff0f5);
+    display:flex;align-items:center;justify-content:center;border:3px dashed rgba(255,107,152,0.18);overflow:hidden;position:relative;
+  }
+  .photo-frame img{width:100%;height:100%;object-fit:cover;display:block}
+  .photo-placeholder{font-size:14px;color:#b76b84;text-align:center;padding:18px}
+  .message-preview{
+    border-radius:10px;padding:12px;background:linear-gradient(180deg, rgba(255,235,241,0.8), rgba(255,245,248,0.8));
+    min-height:110px;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:600;
+  }
+
+  /* right: controls */
+  .right{width:52%;display:flex;flex-direction:column;gap:12px}
+  label{font-size:13px;color:#5b3b46}
+  .controls{background:rgba(255,255,255,0.9);padding:12px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.04)}
+  .row{display:flex;gap:8px;align-items:center}
+  input[type="file"]{padding:6px}
+  input[type="text"], textarea, select, input[type="color"], input[type="range"]{
+    width:100%;padding:8px;border-radius:8px;border:1px solid #eee;box-sizing:border-box;font-size:14px;
+  }
+  textarea{min-height:90px;resize:vertical}
+  .btn{display:inline-block;padding:8px 12px;border-radius:8px;background:var(--accent);color:#fff;border:none;cursor:pointer;font-weight:600}
+  .btn.secondary{background:#fff;border:1px solid rgba(0,0,0,0.08);color:var(--text)}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .small{font-size:13px;padding:6px 10px}
+
+  /* decorative hearts */
+  .hearts{position:fixed;left:0;top:0;right:0;bottom:0;pointer-events:none;overflow:hidden}
+  .heart{position:absolute;width:18px;height:18px;transform:rotate(45deg);background:var(--accent);border-radius:4px 0 0 0;opacity:0.9}
+  .heart:before,.heart:after{content:"";position:absolute;background:var(--accent);width:18px;height:18px;border-radius:50%}
+  .heart:before{left:-9px;top:0}
+  .heart:after{left:0;top:-9px}
+
+  /* title text */
+  .title{
+    position:absolute;left:28px;top:22px;font-weight:800;color:var(--accent);font-size:22px;letter-spacing:0.6px
+  }
+
+  /* confetti canvas overlay */
+  #confettiCanvas{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:30}
+
+  /* footer small note */
+  .note{font-size:12px;color:#7b5b64;margin-top:6px}
+  @media (max-width:880px){
+    .card{width:100%;flex-direction:column;height:auto;padding-bottom:36px}
+    .left,.right{width:100%}
+    .title{left:16px}
+  }
+</style>
+</head>
+<body>
+<div class="hearts" id="hearts"></div>
+
+<div class="wrap">
+  <div class="card" id="card">
+    <div class="title">Happy Mother's Day 🌸</div>
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="left">
+      <div class="photo-frame" id="photoFrame" title="Upload a photo from the controls">
+        <div class="photo-placeholder">No photo yet — upload one from the right</div>
+        <img id="photoImg" alt="Mom photo" style="display:none;">
+      </div>
+
+      <div class="message-preview" id="previewText">To the most wonderful Mom — with love.</div>
+      <div class="note">Tip: Use the controls to customize the message and colors. Click "Celebrate!" for confetti.</div>
+    </div>
+
+    <div class="right">
+      <div class="controls">
+        <label>Upload photo (JPG/PNG)</label>
+        <div class="row"><input id="photoInput" type="file" accept="image/*"></div>
+
+        <label>Type your message</label>
+        <textarea id="messageInput" placeholder="Write something sweet...">To the most wonderful Mom — with love.</textarea>
+
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <div style="flex:1">
+            <label>Font size</label>
+            <input id="fontRange" type="range" min="14" max="40" value="20">
+          </div>
+          <div style="width:110px">
+            <label>Text color</label>
+            <input id="textColor" type="color" value="#3b2b2b">
+          </div>
+        </div>
+
+        <div style="margin-top:8px;display:flex;gap:8px">
+          <div style="flex:1">
+            <label>Background accent</label>
+            <input id="accentColor" type="color" value="#ff6b98">
+          </div>
+          <div style="width:140px">
+            <label>Choose font</label>
+            <select id="fontSelect">
+              <option value="system-ui,Segoe UI,Roboto,Arial">System UI</option>
+              <option value="'Georgia', serif">Georgia (elegant)</option>
+              <option value="'Brush Script MT', cursive">Brush Script (handwritten)</option>
+              <option value="'Courier New', monospace">Courier (typewriter)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:10px" class="actions">
+          <button class="btn" id="applyBtn">Apply to Card</button>
+          <button class="btn secondary small" id="celebrateBtn">Celebrate! 🎉</button>
+          <button class="btn secondary small" id="playMelodyBtn">Play Melody ▶</button>
+          <button class="btn secondary small" id="printBtn">Print / Save as PDF</button>
+        </div>
+      </div>
+
+      <div class="controls" style="margin-top:8px">
+        <label>Extra</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn secondary small" id="resetBtn">Reset</button>
+          <button class="btn secondary small" id="toggleHearts">Toggle Hearts</button>
+          <button class="btn secondary small" id="downloadBtn">Download Card Image (PNG)</button>
+        </div>
+        <div class="note" style="margin-top:8px">Download uses browser APIs. If it fails on mobile, use Print → Save as PDF or take a screenshot.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- floating hearts animation ---------- */
+const heartsWrap = document.getElementById('hearts');
+let heartsOn = true;
+function spawnHeart(){
+  if(!heartsOn) return;
+  const h = document.createElement('div');
+  h.className='heart';
+  const size = 10 + Math.random()*26;
+  h.style.width = h.style.height = size+'px';
+  h.style.left = Math.random()*100+'%';
+  h.style.top = (70 + Math.random()*30)*-1 + 'px';
+  h.style.opacity = 0.8 + Math.random()*0.2;
+  const rot = Math.random()*50 - 25;
+  h.style.transform = 'rotate('+rot+'deg)';
+  heartsWrap.appendChild(h);
+  const duration = 6 + Math.random()*6;
+  h.animate([
+    {transform: `translateY(0) rotate(${rot}deg)`, opacity:1},
+    {transform: `translateY(${window.innerHeight + 200}px) rotate(${rot+60}deg)`, opacity:0.1}
+  ], {duration: duration*1000, easing:'linear'});
+  setTimeout(()=>{ h.remove() }, duration*1000 + 200);
+}
+let heartSpawner = setInterval(spawnHeart, 800);
+
+/* ---------- photo upload and preview ---------- */
+const photoInput = document.getElementById('photoInput');
+const photoImg = document.getElementById('photoImg');
+const photoFrame = document.getElementById('photoFrame');
+photoInput.addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const url = URL.createObjectURL(f);
+  photoImg.src = url; photoImg.style.display = 'block';
+  const ph = photoFrame.querySelector('.photo-placeholder');
+  if(ph) ph.style.display='none';
+});
+
+/* ---------- controls affecting preview ---------- */
+const messageInput = document.getElementById('messageInput');
+const previewText = document.getElementById('previewText');
+const fontRange = document.getElementById('fontRange');
+const textColor = document.getElementById('textColor');
+const accentColor = document.getElementById('accentColor');
+const fontSelect = document.getElementById('fontSelect');
+const applyBtn = document.getElementById('applyBtn');
+
+function applySettings(){
+  previewText.textContent = messageInput.value || 'Love you, Mom!';
+  previewText.style.fontSize = fontRange.value+'px';
+  previewText.style.color = textColor.value;
+  previewText.style.fontFamily = fontSelect.value;
+  // change accent color usage:
+  document.documentElement.style.setProperty('--accent', accentColor.value);
+  // frame border adapt:
+  photoFrame.style.borderColor = hexToRgba(accentColor.value, 0.18);
+}
+applyBtn.addEventListener('click', applySettings);
+
+/* helper: hex to rgba */
+function hexToRgba(hex, a=1){
+  hex = hex.replace('#','');
+  if(hex.length===3) hex = hex.split('').map(c=>c+c).join('');
+  const r = parseInt(hex.substring(0,2),16);
+  const g = parseInt(hex.substring(2,4),16);
+  const b = parseInt(hex.substring(4,6),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+/* ---------- confetti (simple) ---------- */
+const confettiCanvas = document.getElementById('confettiCanvas');
+const confCtx = confettiCanvas.getContext('2d');
+let confettiParticles = [];
+function resizeCanvas(){ confettiCanvas.width = confettiCanvas.clientWidth; confettiCanvas.height = confettiCanvas.clientHeight; }
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+function createConfetti(){
+  for(let i=0;i<120;i++){
+    confettiParticles.push({
+      x: Math.random()*confettiCanvas.width,
+      y: Math.random()*confettiCanvas.height - confettiCanvas.height,
+      vx: (Math.random()-0.5)*3,
+      vy: 2 + Math.random()*4,
+      size: 6 + Math.random()*10,
+      color: ['#f94144','#f3722c','#f9c74f','#90be6d','#577590'][Math.floor(Math.random()*5)],
+      rot: Math.random()*360,
+      rotSpeed: (Math.random()-0.5)*10
+    });
+  }
+}
+function drawConfetti(){
+  confCtx.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+  confettiParticles.forEach((p,i)=>{
+    p.x += p.vx; p.y += p.vy; p.rot += p.rotSpeed;
+    confCtx.save();
+    confCtx.translate(p.x,p.y);
+    confCtx.rotate(p.rot * Math.PI/180);
+    confCtx.fillStyle = p.color;
+    confCtx.fillRect(-p.size/2,-p.size/2,p.size,p.size);
+    confCtx.restore();
+    if(p.y > confettiCanvas.height + 50) confettiParticles.splice(i,1);
+  });
+  requestAnimationFrame(drawConfetti);
+}
+drawConfetti();
+
+const celebrateBtn = document.getElementById('celebrateBtn');
+celebrateBtn.addEventListener('click', ()=>{
+  createConfetti();
+  // small heart burst too
+  for(let i=0;i<16;i++) spawnHeart();
+});
+
+/* ---------- simple melody using WebAudio ---------- */
+let audioCtx = null;
+let melodyOsc = null;
+let melodyPlaying = false;
+const playMelodyBtn = document.getElementById('playMelodyBtn');
+playMelodyBtn.addEventListener('click', async ()=>{
+  if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  if(melodyPlaying){
+    stopMelody(); return;
+  }
+  melodyPlaying = true; playMelodyBtn.textContent = 'Stop Melody ⏸';
+  // create simple arpeggio
+  const notes = [440, 660, 880, 660, 523, 659, 784];
+  let t = audioCtx.currentTime;
+  const master = audioCtx.createGain(); master.connect(audioCtx.destination); master.gain.value = 0.12;
+  notes.forEach((n,i)=>{
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine';
+    o.frequency.value = n;
+    g.gain.value = 0;
+    o.connect(g); g.connect(master);
+    o.start(t + i*0.25);
+    g.gain.setValueAtTime(0, t + i*0.25);
+    g.gain.linearRampToValueAtTime(0.14, t + i*0.25 + 0.02);
+    g.gain.linearRampToValueAtTime(0, t + i*0.25 + 0.24);
+    o.stop(t + i*0.25 + 0.28);
+  });
+  // stop after full play
+  setTimeout(()=>{ melodyPlaying=false; playMelodyBtn.textContent='Play Melody ▶'; }, notes.length*260 + 300);
+});
+function stopMelody(){ /* short — nothing to persist */ melodyPlaying=false; playMelodyBtn.textContent='Play Melody ▶'; }
+
+/* ---------- toggle hearts ---------- */
+const toggleHeartsBtn = document.getElementById('toggleHearts');
+toggleHeartsBtn.addEventListener('click', ()=>{
+  heartsOn = !heartsOn;
+  toggleHeartsBtn.textContent = heartsOn ? 'Toggle Hearts' : 'Toggle Hearts (off)';
+});
+
+/* ---------- reset ---------- */
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  messageInput.value = 'To the most wonderful Mom — with love.';
+  fontRange.value = 20;
+  textColor.value = '#3b2b2b';
+  accentColor.value = '#ff6b98';
+  fontSelect.value = "system-ui,Segoe UI,Roboto,Arial";
+  photoImg.src=''; photoImg.style.display='none';
+  const ph = photoFrame.querySelector('.photo-placeholder'); if(ph) ph.style.display='block';
+  applySettings();
+});
+
+/* ---------- print button ---------- */
+document.getElementById('printBtn').addEventListener('click', ()=>{ window.print(); });
+
+/* ---------- download card as PNG (draw card area to canvas) ---------- */
+document.getElementById('downloadBtn').addEventListener('click', async ()=>{
+  // draw a snapshot of the .card element onto a canvas
+  const el = document.getElementById('card');
+  const rect = el.getBoundingClientRect();
+  // create an offscreen canvas and draw simplified snapshot
+  const canvas = document.createElement('canvas');
+  const scale = 2; // high-res
+  canvas.width = rect.width * scale;
+  canvas.height = rect.height * scale;
+  const ctx = canvas.getContext('2d');
+  // background gradient
+  const g = ctx.createLinearGradient(0,0,0,canvas.height);
+  g.addColorStop(0, '#ffffff');
+  g.addColorStop(1, '#fff8fb');
+  ctx.fillStyle = g; ctx.fillRect(0,0,canvas.width,canvas.height);
+  // photo area
+  const photoRect = document.getElementById('photoFrame').getBoundingClientRect();
+  const cardRect = el.getBoundingClientRect();
+  const relX = (photoRect.left - cardRect.left) * scale;
+  const relY = (photoRect.top - cardRect.top) * scale;
+  const relW = photoRect.width * scale;
+  const relH = photoRect.height * scale;
+  const img = document.getElementById('photoImg');
+  if(img && img.src && img.complete){
+    try{
+      ctx.drawImage(img, relX, relY, relW, relH);
+    }catch(e){
+      // cross-origin or other issues — fill placeholder
+      ctx.fillStyle = hexToRgba(getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff6b98',0.08);
+      ctx.fillRect(relX, relY, relW, relH);
+    }
+  } else {
+    ctx.fillStyle = hexToRgba(getComputedStyle(document.documentElement).getPropertyValue('--accent') || '#ff6b98',0.08);
+    ctx.fillRect(relX, relY, relW, relH);
+  }
+  // message
+  ctx.textAlign='center';
+  const msg = document.getElementById('messageInput').value;
+  ctx.fillStyle = document.getElementById('textColor').value;
+  const fontSize = parseInt(document.getElementById('fontRange').value,10) * scale;
+  ctx.font = `bold ${fontSize}px ${document.getElementById('fontSelect').value.split(',')[0] || 'sans-serif'}`;
+  ctx.fillText(msg, canvas.width*0.33, (photoRect.bottom - cardRect.top) * scale + 120);
+  // title
+  ctx.fillStyle = document.getElementById('accentColor').value;
+  ctx.font = `900 ${28*scale}px sans-serif`;
+  ctx.fillText('Happy Mother\'s Day', 28*scale + 80, 34*scale);
+  // produce file
+  const data = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = data; a.download = 'mothers-day-card.png';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+
+/* ---------- small safety: stop heavy loops on pagehide ---------- */
+window.addEventListener('pagehide', ()=>{ clearInterval(heartSpawner); });
+
+/* ---------- helper to keep confetti running lightly ---------- */
+setInterval(()=>{ if(confettiParticles.length>0) createConfetti(); }, 6000);
+
+/* ---------- small init ---------- */
+applySettings();
+</script>
+</body>
+</html>
